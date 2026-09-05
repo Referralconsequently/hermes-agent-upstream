@@ -1,15 +1,15 @@
-name: FIFO discovery platform evidence
+name: FIFO startup and discovery platform evidence
 
 on:
   push:
-    branches: [ci/fifo-discovery-platform-evidence]
+    branches: [ci/fifo-startup-platform-evidence]
 
 permissions:
   contents: read
 
 jobs:
   regression:
-    name: FIFO discovery on ${{ matrix.os }}
+    name: FIFO startup and discovery on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           # Test the upstream PR head, independent of this CI-only branch.
-          ref: f5db39aa22a77d1434ca18d819b08f3ff4bcab59
+          ref: 63cf417396960e6eec15d2481d2a323abe179d8a
           persist-credentials: false
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
         with:
@@ -40,6 +40,8 @@ jobs:
           git rev-parse HEAD
           uname -s
           scripts/run_tests.sh \
+            tests/hermes_cli/test_fifo_startup.py \
+            tests/agent/test_secret_scope.py \
             tests/hermes_cli/test_fifo_credential_discovery.py \
             tests/hermes_cli/test_config.py \
             tests/hermes_cli/test_env_loader.py \
