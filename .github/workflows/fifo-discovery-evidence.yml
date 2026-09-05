@@ -1,0 +1,49 @@
+name: FIFO discovery platform evidence
+
+on:
+  push:
+    branches: [ci/fifo-discovery-platform-evidence]
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    name: FIFO discovery on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Test the upstream PR head, independent of this CI-only branch.
+          ref: f5db39aa22a77d1434ca18d819b08f3ff4bcab59
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
+        with:
+          version: "0.9.28"
+      - name: Install locked test dependencies
+        run: |
+          uv python install 3.11
+          uv sync --locked --python 3.11 --extra all --extra dev --extra anthropic --extra mistral --extra fal --extra modal --extra daytona --extra hindsight --extra parallel-web
+      - name: Run model and skill discovery regressions
+        shell: bash
+        env:
+          HERMES_TEST_FILE_RETRIES: "0"
+          OPENROUTER_API_KEY: ""
+          OPENAI_API_KEY: ""
+        run: |
+          source .venv/bin/activate
+          git rev-parse HEAD
+          uname -s
+          scripts/run_tests.sh \
+            tests/hermes_cli/test_fifo_credential_discovery.py \
+            tests/hermes_cli/test_config.py \
+            tests/hermes_cli/test_env_loader.py \
+            tests/tools/test_skill_fifo_discovery.py \
+            tests/tools/test_skills_tool.py \
+            tests/tools/test_skill_env_passthrough.py \
+            --file-timeout 90 -q
